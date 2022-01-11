@@ -153,7 +153,6 @@
     debug: #use debug module
       msg: "Container Output: {{nginx_output.stdout}}"
 
-
   - name: Install deps
     apt: name={{ item }} state=present
     with_items:
