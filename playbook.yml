@@ -80,6 +80,7 @@
 
 - name: Config
   hosts: Depas-w2no4-clone
+  
   vars_files:
   - ["./vars.yml"]
 
@@ -134,6 +135,7 @@
         - git-core
         - gnupg
         - python3-pip
+        - ufw
        
       state: latest
     become: true
@@ -152,6 +154,40 @@
   - name: Show output of nginx status
     debug: #use debug module
       msg: "Container Output: {{nginx_output.stdout}}"
+
+  - name: Copy the nginx config file and restart nginx
+    copy:
+      src: ./static_site.cfg
+      dest: /etc/nginx/sites-available/static_site.cfg
+    become: yes
+
+  - name: Create symlink
+    file:
+      src: /etc/nginx/sites-available/static_site.cfg
+      dest: /etc/nginx/sites-enabled/default
+      state: link
+    become: yes
+
+  - name: Copy the content of the web site
+    copy:
+      src: ./site/
+      dest: /home/ToTo/site
+    become: yes
+    become_method: sudo
+
+  - name: Restart nginx
+    service:
+      name: nginx
+      state: restarted
+    become: yes
+
+  - name: Allow all access to tcp port 80
+    ufw:
+      rule: allow
+      port: '80'
+      proto: tcp
+    become: yes
+    become_method: sudo
 
   - name: Install deps
     apt: name={{ item }} state=present
